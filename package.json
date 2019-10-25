@@ -1,0 +1,31 @@
+{
+  "name": "propertypalvisualiser",
+  "version": "0.0.1",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "debug": "nodemon server.js",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SudoZachCampbell/PropertyPalVisualiser.git"
+  },
+  "author": "Zach Campbell",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SudoZachCampbell/PropertyPalVisualiser/issues"
+  },
+  "homepage": "https://github.com/SudoZachCampbell/PropertyPalVisualiser#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "nodemon": "^1.19.4"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "jsdom": "^15.2.0",
+    "lodash": "^4.17.15",
+    "request": "^2.88.0",
+    "typescript": "^3.6.4"
+  }
+}
