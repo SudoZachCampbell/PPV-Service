@@ -1,5 +1,5 @@
 var express = require('express');
-var manageProperty = require('../services/manageProperty');
+var manageProperty = require('../services/manage-property');
 
 var router = express.Router();
 
