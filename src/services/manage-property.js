@@ -4,23 +4,25 @@ var Property = require('../models/Property').property;
 var _ = require('lodash');
 var jsdom = require('jsdom');
 var uuid = require('uuid-by-string');
+var db = require('../external/db');
+
 const { JSDOM } = jsdom;
 
 module.exports = {
     getProperty: async (area) => {
-        var propertyUrls = await iteratePropertyPages(area, pages);
+        var propertyUrls = await iteratePropertyPages(area);
         var propertyModels = await getPropertyModels(propertyUrls);
-        return propertyUrls;
+        return propertyModels;
     }
 }
 
 var getPages = (body) => {
     body = new JSDOM(body).window.document;
-    var page = body.querySelector('.paging-numbers .paging .paging-last a');
-    if (page) {
-        page = page.innerHTML
+    var pages = body.querySelector('.paging-numbers .paging .paging-last a');
+    if (pages) {
+        pages = pages.innerHTML
     }
-    return page;
+    return pages;
 }
 
 var iteratePropertyPages = async (area) => {
@@ -61,21 +63,32 @@ var getPropertyModels = async (urls) => {
         accum[propId] = propObj;
         return accum;
     }, modelObject);
+    // for(let [key, value] of Object.entries(modelObject)) {
+    //     await db.saveProperty(key, value);
+    // }
     return modelObject;
 }
 
 var storePropertyModels = (property) => {
-    property = new JSDOM(property);
-    property = property.window.document;
-    let keyProperties = _.values(property.getElementById('key-info-table').querySelectorAll('tr'));
-    let keyPropsObj = keyProperties.reduce((accum, keyProp) => {
-        return { ...accum, ...buildKeyProperties(keyProp.querySelector('th'), keyProp.querySelector('td')) }
-    }, {});
-    let address = property.querySelector('#body .prop-summary .prop-summary-row h1').innerHTML.split(',')[0].trim();
-    let postcode = property.querySelector('#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib').innerHTML;
-    let propId = uuid(address + postcode);
-    let propObj = new Property({ id: propId, address: address, postcode: postcode, ...keyPropsObj });
-    return [propId, propObj];
+    try {
+        property = new JSDOM(property);
+        property = property.window.document;
+        let keyProperties = _.values(property.getElementById('key-info-table').querySelectorAll('tr'));
+        let keyPropsObj = keyProperties.reduce((accum, keyProp) => {
+            return { ...accum, ...buildKeyProperties(keyProp.querySelector('th'), keyProp.querySelector('td')) }
+        }, {});
+        let propDescription = buildDescription(property.getElementById('additional-info'));
+        if(propDescription) {
+            keyPropsObj['description'] = propDescription;
+        }
+        let address = property.querySelector('#body .prop-summary .prop-summary-row h1').innerHTML.split(',')[0].trim();
+        let postcode = property.querySelector('#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib').innerHTML;
+        let propId = uuid(address + postcode);
+        let propObj = new Property({ id: propId, address: address, postcode: postcode, ...keyPropsObj });
+        return [propId, propObj];
+    } catch (err) {
+        throw new Error(err);
+    }
 }
 
 var buildKeyProperties = (keyPropHeader, keyPropValue) => {
@@ -120,10 +133,16 @@ var buildKeyProperties = (keyPropHeader, keyPropValue) => {
             propObj['status'] = keyPropValue.innerHTML.trim();
             break;
         case 'Deposit':
-            propObj['deposit'] = parseInt(keyPropValue.innerHTML.trim().replace('£','').replace(',',''));
+            propObj['deposit'] = parseInt(keyPropValue.innerHTML.trim().replace('£', '').replace(',', ''));
             break;
         default:
             throw new Error(`Unhandled Key Property Type: ${keyPropHeader.innerHTML}`);
     }
     return propObj;
+}
+
+var buildDescription = (descBody) => {
+    let paragraphs = _.values(descBody.querySelectorAll('.prop-descr-left .prop-descr-text p'));
+    paragraphs = paragraphs.map(p => p.textContent).join();
+    return paragraphs;
 }

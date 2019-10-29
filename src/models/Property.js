@@ -1,9 +1,10 @@
 'use strict'
 
 var property = class Property {
-    constructor({id, rent, furnished, availableFrom, style, receptions, status, epcRating, heating, lease, rates, viewableFrom, deposit, bedrooms, bathrooms, address, postcode}={}) {
+    constructor({id, rent, furnished, description, availableFrom, style, receptions, status, epcRating, heating, lease, rates, viewableFrom, deposit, bedrooms, bathrooms, address, postcode}={}) {
         this.id = id;
         this.rent = rent;
+        this.description = description;
         this.furnished = furnished;
         this.availableFrom = availableFrom;
         this.style = style;
