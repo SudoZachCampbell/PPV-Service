@@ -14,6 +14,19 @@ module.exports = {
             }
         });
     },
+    getFilteredPropertySearch: (queryString, page) => {
+        return new Promise((resolve, reject) => {
+            if (page === 0) {
+                request.get(`https://www.propertypal.com/search?${queryString}`, (error, response, body) => {
+                    resolve(body);
+                });
+            } else {
+                request.get(`https://www.propertypal.com/search?${queryString}&page=${page}`, (error, response, body) => {
+                    resolve(body);
+                });
+            }
+        });
+    },
     getPropertyByUrl: (url) => {
         return new Promise((resolve, reject) => {
             console.log(`Getting Property: ${url}`);

@@ -1,7 +1,9 @@
 'use strict'
 
 var property = class Property {
-    constructor({id, rent, furnished, description, availableFrom, style, receptions, status, epcRating, heating, lease, rates, viewableFrom, deposit, bedrooms, bathrooms, address, postcode}={}) {
+    keywords = []
+
+    constructor({ id, rent, furnished, description, availableFrom, style, receptions, status, epcRating, heating, lease, rates, viewableFrom, deposit, bedrooms, bathrooms, address, postcode } = {}) {
         this.id = id;
         this.rent = rent;
         this.description = description;
@@ -21,6 +23,14 @@ var property = class Property {
         this.address = address;
         this.postcode = postcode;
     }
+
+    searchKeywords = keywordsSearch => {
+        if (this.description) {
+            keywordsSearch.forEach(keyword => {
+                if (this.description.includes(keyword)) this.keywords.push(keyword);
+            });
+        }
+    };
 }
 
 exports.property = property;

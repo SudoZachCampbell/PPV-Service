@@ -9,11 +9,16 @@ var db = require('../external/db');
 const { JSDOM } = jsdom;
 
 module.exports = {
-    getProperty: async (area) => {
-        var propertyUrls = await iteratePropertyPages(area);
+    getProperty: async (area, params) => {
+        var propertyUrls = await iteratePropertyPages(area, params);
         var propertyModels = await getPropertyModels(propertyUrls);
+        if (params.keywords) {
+            _.forEach(propertyModels, (value, key) => {
+                propertyModels[key].searchKeywords(params.keywords);
+            });
+        }
         return propertyModels;
-    }
+    },
 }
 
 var getPages = (body) => {
@@ -25,16 +30,41 @@ var getPages = (body) => {
     return pages;
 }
 
-var iteratePropertyPages = async (area) => {
-    var body = await propertyPal.getPropertySearchByArea(area, 1);
-    let pages = getPages(body)
-    let propertyList = []
+var iteratePropertyPages = async (area, params) => {
+    let body;
+    let queryString = '';
+    if (!params) {
+        body = await propertyPal.getPropertySearchByArea(area, 1);
+    } else {
+        queryString = buildFilteredQueryString(params);
+        body = await propertyPal.getFilteredPropertySearch(queryString, 0);
+
+    }
+    let pages = getPages(body);
+    let propertyList = [];
     for (var i = 0; i < pages; i++) {
         console.log(`Iterating Page Number: ${i + 1}`);
-        let body = await propertyPal.getPropertySearchByArea(area, i + 1)
+        if (!params) {
+            body = await propertyPal.getPropertySearchByArea(area, 1);
+        } else {
+            body = await propertyPal.getFilteredPropertySearch(queryString, i);
+        }
         propertyList.push(...getPropertyUrls(body));
     }
     return propertyList;
+}
+
+var buildFilteredQueryString = (params) => {
+    let queryValues = _.reduce(_.omit(params, ['keywords']), (accum, value, key) => {
+        if (typeof value === 'Array') {
+            value = value.map(x => `${key}=${x}`);
+            accum.push(...value);
+        } else {
+            accum.push(`${key}=${value}`);
+        }
+        return accum;
+    }, [])
+    return queryValues.join('&').replace(':', '=').replace('"', '');
 }
 
 var getPropertyUrls = (body) => {
@@ -78,7 +108,7 @@ var storePropertyModels = (property) => {
             return { ...accum, ...buildKeyProperties(keyProp.querySelector('th'), keyProp.querySelector('td')) }
         }, {});
         let propDescription = buildDescription(property.getElementById('additional-info'));
-        if(propDescription) {
+        if (propDescription) {
             keyPropsObj['description'] = propDescription;
         }
         let address = property.querySelector('#body .prop-summary .prop-summary-row h1').innerHTML.split(',')[0].trim();
@@ -87,7 +117,7 @@ var storePropertyModels = (property) => {
         let propObj = new Property({ id: propId, address: address, postcode: postcode, ...keyPropsObj });
         return [propId, propObj];
     } catch (err) {
-        throw new Error(err);
+        throw err;
     }
 }
 
@@ -142,7 +172,10 @@ var buildKeyProperties = (keyPropHeader, keyPropValue) => {
 }
 
 var buildDescription = (descBody) => {
-    let paragraphs = _.values(descBody.querySelectorAll('.prop-descr-left .prop-descr-text p'));
-    paragraphs = paragraphs.map(p => p.textContent).join();
+    let paragraphs;
+    if (descBody) {
+        paragraphs = _.values(descBody.querySelectorAll('.prop-descr-left .prop-descr-text p'));
+        paragraphs = paragraphs.map(p => p.textContent).join();
+    }
     return paragraphs;
 }
