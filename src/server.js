@@ -1,4 +1,4 @@
-var propertyRoute = require('./src/routes/property-route').router;
+var propertyRoute = require('./routes/property-route').router;
 var express = require('express');
 var app = express();
 
