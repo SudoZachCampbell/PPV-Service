@@ -9,7 +9,16 @@ var db = require('../external/db');
 const { JSDOM } = jsdom;
 
 module.exports = {
-    getProperty: async (area, params) => {
+
+    /**
+     * Gets a Property based on input params
+     *      
+     * @async
+     * @param {string} area - The area to search in
+     * @param {object} [params=''] - An optional list of params for filtering
+     * @returns {<object>} A list of found properties
+     */
+    getProperty: async (area, params = '') => {
         var propertyUrls = await iteratePropertyPages(area, params);
         var propertyModels = await getPropertyModels(propertyUrls);
         if (params.keywords) {
@@ -19,15 +28,6 @@ module.exports = {
         }
         return propertyModels;
     },
-}
-
-var getPages = (body) => {
-    body = new JSDOM(body).window.document;
-    var pages = body.querySelector('.paging-numbers .paging .paging-last a');
-    if (pages) {
-        pages = pages.innerHTML
-    }
-    return pages;
 }
 
 var iteratePropertyPages = async (area, params) => {
@@ -52,6 +52,15 @@ var iteratePropertyPages = async (area, params) => {
         propertyList.push(...getPropertyUrls(body));
     }
     return propertyList;
+}
+
+var getPages = (body) => {
+    body = new JSDOM(body).window.document;
+    var pages = body.querySelector('.paging-numbers .paging .paging-last a');
+    if (pages) {
+        pages = pages.innerHTML
+    }
+    return pages;
 }
 
 var buildFilteredQueryString = (params) => {
