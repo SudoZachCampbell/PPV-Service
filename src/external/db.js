@@ -14,6 +14,9 @@ aws.config.update({
 
 var docClient = new aws.DynamoDB.DocumentClient();
 
+/**
+ * Unused
+ */
 exports.saveProperty = (key, propertyObj) => {
     return new Promise((resolve, reject) => {
         console.table(propertyObj);
