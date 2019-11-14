@@ -45,7 +45,7 @@ var iteratePropertyPages = async (area, params) => {
     for (var i = 0; i < pages; i++) {
         console.log(`Iterating Page Number: ${i + 1}`);
         if (!params) {
-            body = await propertyPal.getPropertySearchByArea(area, 1);
+            body = await propertyPal.getPropertySearchByArea(area, i+1);
         } else {
             body = await propertyPal.getFilteredPropertySearch(queryString, i);
         }
