@@ -28,6 +28,9 @@ module.exports = {
                     value.searchKeywords(params.keywords);
                 });
             }
+            for (let [key, value] of Object.entries(search.searchResult)) {
+                await db.saveProperty(key, value);
+            }
             return search;
         } catch (err) {
             throw err;
@@ -36,8 +39,19 @@ module.exports = {
 
     getKeywordStatistics: async (searchId) => {
         let searchResult = await db.getSearch(searchId);
-        searchResult = _.keyBy(searchResult.Items, result => result.id);
-        return _.filter(searchResult, (value, key) => key === 'keywords')
+        searchResult = searchResult.Items;
+        return _.reduce(searchResult, (accum, value) => {
+            if (value.keywords.length !== 0) {
+                value.keywords.forEach(value => {
+                    if (accum[value]) {
+                        accum[value] += 1
+                    } else {
+                        accum[value] = 1
+                    }
+                });
+            }
+            return accum;
+        }, {})
     }
 }
 
@@ -114,9 +128,6 @@ let getPropertyModels = async (urls) => {
         accum[propId] = propObj;
         return accum;
     }, modelObject);
-    for (let [key, value] of Object.entries(modelObject)) {
-        await db.saveProperty(key, value);
-    }
     return { searchId: searchId, searchResult: modelObject };
 }
 
