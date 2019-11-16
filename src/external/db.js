@@ -17,9 +17,8 @@ var docClient = new aws.DynamoDB.DocumentClient();
 /**
  * Unused
  */
-exports.saveProperty = (key, propertyObj) => {
+let saveProperty = (key, propertyObj) => {
     return new Promise((resolve, reject) => {
-        console.table(propertyObj);
         var params = {
             TableName: tableName,
             Item: propertyObj
@@ -29,4 +28,28 @@ exports.saveProperty = (key, propertyObj) => {
             resolve(data);
         });
     });
+}
+
+let getSearch = (searchId) => {
+    return new Promise((resolve, reject) => {
+        var params = {
+            TableName: tableName,
+            KeyConditionExpression: "#search = :search",
+            ExpressionAttributeNames:{
+                "#search": "search_id"
+            },
+            ExpressionAttributeValues: {
+                ":search": searchId
+            }
+        };
+        docClient.query(params, (err, data) => {
+            if (err) reject(err);
+            resolve(data);
+        });
+    });
+}
+
+module.exports = {
+    saveProperty,
+    getSearch
 }

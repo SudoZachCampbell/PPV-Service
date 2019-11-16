@@ -1,9 +1,10 @@
 'use strict'
 
-var property = class Property {
+let property = class Property {
     keywords = []
 
-    constructor({ id, rent, furnished, description, availableFrom, style, receptions, status, epcRating, heating, lease, rates, viewableFrom, deposit, bedrooms, bathrooms, address, postcode } = {}) {
+    constructor({ search_id, id, rent, furnished, description, availableFrom, style, receptions, status, epcRating, heating, lease, rates, viewableFrom, deposit, bedrooms, bathrooms, address, postcode } = {}) {
+        this.search_id = search_id;
         this.id = id;
         this.rent = rent;
         this.description = description;
@@ -22,6 +23,7 @@ var property = class Property {
         this.bathrooms = bathrooms;
         this.address = address;
         this.postcode = postcode;
+        this.lastUpdated = new Date(Date.now()).toISOString();
     }
 
     searchKeywords = keywordsSearch => {

@@ -1,10 +1,11 @@
 'use strict'
-var propertyPal = require('../external/propertypal');
-var Property = require('../models/Property').property;
-var _ = require('lodash');
-var jsdom = require('jsdom');
-var uuid = require('uuid-by-string');
-var db = require('../external/db');
+let propertyPal = require('../external/propertypal');
+let Property = require('../models/Property').property;
+let _ = require('lodash');
+let jsdom = require('jsdom');
+let uuid = require('uuid-by-string');
+let uuidv1 = require('uuid/v1')
+let db = require('../external/db');
 
 const { JSDOM } = jsdom;
 
@@ -19,18 +20,28 @@ module.exports = {
      * @returns {<object>} A list of found properties
      */
     getProperty: async (area, params = '') => {
-        var propertyUrls = await iteratePropertyPages(area, params);
-        var propertyModels = await getPropertyModels(propertyUrls);
-        if (params.keywords) {
-            _.forEach(propertyModels, (value, key) => {
-                propertyModels[key].searchKeywords(params.keywords);
-            });
+        try {
+            const propertyUrls = await iteratePropertyPages(area, params);
+            let search = await getPropertyModels(propertyUrls);
+            if (params.keywords) {
+                _.forEach(search.searchResult, (value, key) => {
+                    value.searchKeywords(params.keywords);
+                });
+            }
+            return search;
+        } catch (err) {
+            throw err;
         }
-        return propertyModels;
     },
+
+    getKeywordStatistics: async (searchId) => {
+        let searchResult = await db.getSearch(searchId);
+        searchResult = _.keyBy(searchResult.Items, result => result.id);
+        return _.filter(searchResult, (value, key) => key === 'keywords')
+    }
 }
 
-var iteratePropertyPages = async (area, params) => {
+let iteratePropertyPages = async (area, params) => {
     let body;
     let queryString = '';
     if (!params) {
@@ -42,10 +53,10 @@ var iteratePropertyPages = async (area, params) => {
     }
     let pages = getPages(body);
     let propertyList = [];
-    for (var i = 0; i < pages; i++) {
+    for (let i = 0; i < pages; i++) {
         console.log(`Iterating Page Number: ${i + 1}`);
         if (!params) {
-            body = await propertyPal.getPropertySearchByArea(area, i+1);
+            body = await propertyPal.getPropertySearchByArea(area, i + 1);
         } else {
             body = await propertyPal.getFilteredPropertySearch(queryString, i);
         }
@@ -54,16 +65,16 @@ var iteratePropertyPages = async (area, params) => {
     return propertyList;
 }
 
-var getPages = (body) => {
+let getPages = (body) => {
     body = new JSDOM(body).window.document;
-    var pages = body.querySelector('.paging-numbers .paging .paging-last a');
+    let pages = body.querySelector('.paging-numbers .paging .paging-last a');
     if (pages) {
         pages = pages.innerHTML
     }
     return pages;
 }
 
-var buildFilteredQueryString = (params) => {
+let buildFilteredQueryString = (params) => {
     let queryValues = _.reduce(_.omit(params, ['keywords']), (accum, value, key) => {
         if (typeof value === 'Array') {
             value = value.map(x => `${key}=${x}`);
@@ -76,7 +87,7 @@ var buildFilteredQueryString = (params) => {
     return queryValues.join('&').replace(':', '=').replace('"', '');
 }
 
-var getPropertyUrls = (body) => {
+let getPropertyUrls = (body) => {
     let propertyList = [];
     body = new JSDOM(body).window.document;
     let propertyListArray = _.values(body.getElementById('body').querySelector('.sr .maxwidth .sr-body .sr-widecol .boxlist').getElementsByTagName('li'));
@@ -89,7 +100,8 @@ var getPropertyUrls = (body) => {
     return propertyList;
 }
 
-var getPropertyModels = async (urls) => {
+let getPropertyModels = async (urls) => {
+    let searchId = uuidv1();
     let propertyPromiseArray = [];
     urls.reduce((accum, url) => {
         accum.push(propertyPal.getPropertyByUrl(url));
@@ -98,17 +110,17 @@ var getPropertyModels = async (urls) => {
     let propertyModelHtmlArray = await Promise.all(propertyPromiseArray);
     let modelObject = {};
     propertyModelHtmlArray.reduce((accum, modelHtml) => {
-        let [propId, propObj] = storePropertyModels(modelHtml);
+        let [propId, propObj] = storePropertyModels(modelHtml, searchId);
         accum[propId] = propObj;
         return accum;
     }, modelObject);
-    // for(let [key, value] of Object.entries(modelObject)) {
-    //     await db.saveProperty(key, value);
-    // }
-    return modelObject;
+    for (let [key, value] of Object.entries(modelObject)) {
+        await db.saveProperty(key, value);
+    }
+    return { searchId: searchId, searchResult: modelObject };
 }
 
-var storePropertyModels = (property) => {
+let storePropertyModels = (property, searchId) => {
     try {
         property = new JSDOM(property);
         property = property.window.document;
@@ -123,14 +135,14 @@ var storePropertyModels = (property) => {
         let address = property.querySelector('#body .prop-summary .prop-summary-row h1').innerHTML.split(',')[0].trim();
         let postcode = property.querySelector('#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib').innerHTML;
         let propId = uuid(address + postcode);
-        let propObj = new Property({ id: propId, address: address, postcode: postcode, ...keyPropsObj });
+        let propObj = new Property({ search_id: searchId, id: propId, address: address, postcode: postcode, ...keyPropsObj });
         return [propId, propObj];
     } catch (err) {
         throw err;
     }
 }
 
-var buildKeyProperties = (keyPropHeader, keyPropValue) => {
+let buildKeyProperties = (keyPropHeader, keyPropValue) => {
     let propObj = {};
     switch (keyPropHeader.innerHTML.trim()) {
         case 'Rent':
@@ -180,7 +192,7 @@ var buildKeyProperties = (keyPropHeader, keyPropValue) => {
     return propObj;
 }
 
-var buildDescription = (descBody) => {
+let buildDescription = (descBody) => {
     let paragraphs;
     if (descBody) {
         paragraphs = _.values(descBody.querySelectorAll('.prop-descr-left .prop-descr-text p'));

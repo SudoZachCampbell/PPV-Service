@@ -1,12 +1,12 @@
 'use strict'
-var assert = require('chai').assert;
-var rewire = require('rewire');
-var fs = require('fs');
+let assert = require('chai').assert;
+let rewire = require('rewire');
+let fs = require('fs');
 
-var app = rewire('../src/services/manage-property.js');
+let app = rewire('../src/services/manage-property.js');
 
-var getPropertyUrls = app.__get__('getPropertyUrls');
-var getPages = app.__get__('getPages');
+let getPropertyUrls = app.__get__('getPropertyUrls');
+let getPages = app.__get__('getPages');
 
 describe('Get Properties', () => {
     it('Should return array of Property URLs', () => {
