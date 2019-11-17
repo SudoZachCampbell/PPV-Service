@@ -19,22 +19,23 @@ module.exports = {
      * @param {object} [params=''] - An optional list of params for filtering
      * @returns {<object>} A list of found properties
      */
-    getProperty: async (area, params = '') => {
+    getPropertyLinks: async (area, params = '') => {
         try {
             const propertyUrls = await iteratePropertyPages(area, params);
-            let search = await getPropertyModels(propertyUrls);
-            if (params.keywords) {
-                _.forEach(search.searchResult, (value, key) => {
-                    value.searchKeywords(params.keywords);
-                });
-            }
-            for (let [key, value] of Object.entries(search.searchResult)) {
-                await db.saveProperty(key, value);
-            }
-            return search;
+            let searchId = uuidv1();
+            return { searchId: searchId, propertyUrls: propertyUrls };
         } catch (err) {
             throw err;
         }
+    },
+
+    getPropertySearch: async (searchId, propertyUrl, keywords) => {
+        let search = await getPropertyModel(propertyUrl, searchId);
+        if (keywords) {
+            search.searchKeywords(keywords);
+        }
+        await db.saveProperty(searchId, search);
+        return search;
     },
 
     getKeywordStatistics: async (searchId) => {
@@ -63,10 +64,9 @@ let iteratePropertyPages = async (area, params) => {
     } else {
         queryString = buildFilteredQueryString(params);
         body = await propertyPal.getFilteredPropertySearch(queryString, 0);
-
     }
-    let pages = getPages(body);
     let propertyList = [];
+    let pages = getPages(body);
     for (let i = 0; i < pages; i++) {
         console.log(`Iterating Page Number: ${i + 1}`);
         if (!params) {
@@ -114,21 +114,10 @@ let getPropertyUrls = (body) => {
     return propertyList;
 }
 
-let getPropertyModels = async (urls) => {
-    let searchId = uuidv1();
-    let propertyPromiseArray = [];
-    urls.reduce((accum, url) => {
-        accum.push(propertyPal.getPropertyByUrl(url));
-        return accum;
-    }, propertyPromiseArray);
-    let propertyModelHtmlArray = await Promise.all(propertyPromiseArray);
-    let modelObject = {};
-    propertyModelHtmlArray.reduce((accum, modelHtml) => {
-        let [propId, propObj] = storePropertyModels(modelHtml, searchId);
-        accum[propId] = propObj;
-        return accum;
-    }, modelObject);
-    return { searchId: searchId, searchResult: modelObject };
+let getPropertyModel = async (url, searchId) => {
+    let propertyPage = await propertyPal.getPropertyByUrl(url);
+    let propObj = storePropertyModels(propertyPage, searchId);
+    return propObj;
 }
 
 let storePropertyModels = (property, searchId) => {
@@ -147,7 +136,7 @@ let storePropertyModels = (property, searchId) => {
         let postcode = property.querySelector('#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib').innerHTML;
         let propId = uuid(address + postcode);
         let propObj = new Property({ search_id: searchId, id: propId, address: address, postcode: postcode, ...keyPropsObj });
-        return [propId, propObj];
+        return propObj;
     } catch (err) {
         throw err;
     }

@@ -17,11 +17,14 @@ var docClient = new aws.DynamoDB.DocumentClient();
 /**
  * Unused
  */
-let saveProperty = (key, propertyObj) => {
+let saveProperty = (searchId, propertyObj) => {
     return new Promise((resolve, reject) => {
         var params = {
             TableName: tableName,
-            Item: propertyObj
+            Item: {
+                search_id: searchId,
+                ...propertyObj
+            }
         };
         docClient.put(params, (err, data) => {
             if (err) reject(err);
@@ -35,7 +38,7 @@ let getSearch = (searchId) => {
         var params = {
             TableName: tableName,
             KeyConditionExpression: "#search = :search",
-            ExpressionAttributeNames:{
+            ExpressionAttributeNames: {
                 "#search": "search_id"
             },
             ExpressionAttributeValues: {

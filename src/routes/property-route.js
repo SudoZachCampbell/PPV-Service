@@ -6,12 +6,24 @@ let router = express.Router();
 router.get('/:propertyArea', async (req, res, next) => {
     let data = {};
     try {
-        data = await manageProperty.getProperty(req.params.propertyArea);
+        data = await manageProperty.getPropertyLinks(req.params.propertyArea);
     } catch (err) {
         console.log(`${err}`);
         res.status(500).json(err);
     };
     res.status(200).json(data);
+});
+
+router.post('/', async (req, res, next) => {
+    let data = {}
+    try {
+        data = await manageProperty.getPropertySearch(req.body.searchId, req.body.propertyUrl, req.body.keywords);
+    } catch (err) {
+        console.log(`${err}`);
+        res.status(500).json(err);
+    }
+    res.status(200).json(data);
+
 });
 
 router.get('/keywordStats/:searchId', async (req, res, next) => {
@@ -28,7 +40,7 @@ router.get('/keywordStats/:searchId', async (req, res, next) => {
 router.post('/:propertyArea', async (req, res, next) => {
     let data = {};
     try {
-        data = await manageProperty.getProperty(req.params.propertyArea, req.body);
+        data = await manageProperty.getPropertyLinks(req.params.propertyArea, req.body);
     } catch (err) {
         console.log(`${err}`);
         res.status(500).json(err);
