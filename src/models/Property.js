@@ -29,7 +29,7 @@ let property = class Property {
     searchKeywords = keywordsSearch => {
         if (this.description) {
             keywordsSearch.forEach(keyword => {
-                if (this.description.includes(keyword)) this.keywords.push(keyword);
+                if (this.description.toLowerCase().includes(keyword.toLowerCase())) this.keywords.push(keyword);
             });
         }
     };
