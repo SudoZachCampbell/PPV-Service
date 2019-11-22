@@ -30,6 +30,7 @@ module.exports = {
     },
 
     getPropertySearch: async (searchId, propertyUrl, keywords) => {
+        console.log("New Search");
         let search = await getPropertyModel(propertyUrl, searchId);
         if (keywords) {
             search.searchKeywords(keywords);
