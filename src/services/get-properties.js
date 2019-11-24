@@ -35,7 +35,7 @@ module.exports = {
         if (keywords) {
             search.searchKeywords(keywords);
         }
-        await db.saveProperty(searchId, search);
+        // await db.saveProperty(searchId, search);
         return search;
     },
 
