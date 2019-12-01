@@ -1,5 +1,5 @@
-let express = require('express');
-let manageProperty = require('../services/get-properties');
+import express from 'express';
+import manageProperty from '../services/get-properties';
 
 let router = express.Router();
 
@@ -37,10 +37,10 @@ router.get('/keywordStats/:searchId', async (req, res, next) => {
     res.status(200).json(data);
 });
 
-router.post('/:propertyArea', async (req, res, next) => {
+router.post('/filtered', async (req, res, next) => {
     let data = {};
     try {
-        data = await manageProperty.getPropertyLinks(req.params.propertyArea, req.body);
+        data = await manageProperty.getPropertyLinks(req.body.term, req.body);
     } catch (err) {
         console.log(`${err}`);
         res.status(500).json(err);

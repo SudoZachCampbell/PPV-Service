@@ -35,4 +35,4 @@ let property = class Property {
     };
 }
 
-exports.property = property;
+export default property;

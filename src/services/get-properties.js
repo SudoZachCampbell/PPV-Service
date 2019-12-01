@@ -1,15 +1,16 @@
 'use strict'
-let propertyPal = require('../external/propertypal');
-let Property = require('../models/Property').property;
-let _ = require('lodash');
-let jsdom = require('jsdom');
-let uuid = require('uuid-by-string');
-let uuidv1 = require('uuid/v1')
-let db = require('../external/db');
+import propertyPal from'../external/propertypal';
+import Property from '../models/Property';
+import _ from 'lodash';
+import jsdom from 'jsdom';
+import uuid from 'uuid-by-string';
+import uuidv1 from 'uuid/v1'
+import db from '../external/db';
+import property from '../models/Property';
 
 const { JSDOM } = jsdom;
 
-module.exports = {
+export default {
 
     /**
      * Gets a Property based on input params
@@ -60,6 +61,7 @@ module.exports = {
 let iteratePropertyPages = async (area, params) => {
     let body;
     let queryString = '';
+    console.log(params);
     if (!params) {
         body = await propertyPal.getPropertySearchByArea(area, 1);
     } else {
@@ -82,16 +84,19 @@ let iteratePropertyPages = async (area, params) => {
 
 let getPages = (body) => {
     body = new JSDOM(body).window.document;
+    console.log(JSON.stringify(body));
     let pages = body.querySelector('.paging-numbers .paging .paging-last a');
     if (pages) {
         pages = pages.innerHTML
+    } else {
+        pages = 1;
     }
     return pages;
 }
 
 let buildFilteredQueryString = (params) => {
     let queryValues = _.reduce(_.omit(params, ['keywords']), (accum, value, key) => {
-        if (typeof value === 'Array') {
+        if (typeof value === 'object') {
             value = value.map(x => `${key}=${x}`);
             accum.push(...value);
         } else {
