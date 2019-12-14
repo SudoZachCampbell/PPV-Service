@@ -12,7 +12,6 @@ router.post('/keywordCounts', (req, res, next) => {
         res.status(500).json(err);
     }
     res.status(200).json(data);
-
 });
 
 exports.router = router;

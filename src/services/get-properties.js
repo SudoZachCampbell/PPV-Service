@@ -28,6 +28,17 @@ export default {
     }
   },
 
+  getPropertyCount: async (area, params) => {
+    try {
+      console.log(`Counting for Area ${area}`);
+      const propertyCount = await countProperties(area, params);
+      console.log(`Property count is ${propertyCount}`)
+      return { propertyCount };
+    } catch (err) {
+      throw err;
+    }
+  },
+
   getPropertySearch: async (searchId, propertyUrl, keywords) => {
     console.log('New Search');
     let [propId, propObj] = await getPropertyModel(propertyUrl, searchId);
@@ -79,6 +90,23 @@ export default {
     }
   }
 };
+
+const countProperties = async (area, params) => {
+  let body;
+  let queryString = '';
+  if (!params) {
+    body = await propertyPal.getPropertySearchByArea(area, 1);
+  } else {
+    queryString = buildFilteredQueryString(params);
+    body = await propertyPal.getFilteredPropertySearch(queryString, 0);
+  }
+  return getCountElement(body);
+}
+
+const getCountElement = body => {
+  body = new JSDOM(body).window.document;
+  return body.querySelector('.pgheader-currentpage em').innerHTML;
+}
 
 const iteratePropertyPages = async (area, params) => {
   let body;

@@ -58,4 +58,18 @@ router.post('/filtered/:performance?', async (req, res, next) => {
   res.status(200).json(data);
 });
 
+router.post('/count', async (req, res, next) => {
+  let data = {};
+  try {
+    data = await manageProperty.getPropertyCount(
+      req.body.term,
+      req.body.propertyUrl
+    );
+  } catch (err) {
+    console.log(`${err}`);
+    res.status(500).json(err);
+  }
+  res.status(200).json(data);
+});
+
 exports.router = router;
