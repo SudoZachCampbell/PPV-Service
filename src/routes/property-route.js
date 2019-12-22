@@ -63,7 +63,7 @@ router.post('/count', async (req, res, next) => {
   try {
     data = await manageProperty.getPropertyCount(
       req.body.term,
-      req.body.propertyUrl
+      req.body
     );
   } catch (err) {
     console.log(`${err}`);

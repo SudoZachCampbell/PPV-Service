@@ -32,7 +32,6 @@ export default {
     try {
       console.log(`Counting for Area ${area}`);
       const propertyCount = await countProperties(area, params);
-      console.log(`Property count is ${propertyCount}`)
       return { propertyCount };
     } catch (err) {
       throw err;
@@ -74,6 +73,7 @@ export default {
     try {
       const propertyUrls = await iteratePropertyPages(area, params);
       let search = await getPropertyModels(propertyUrls);
+      search.count = propertyUrls.length;
       let trackKeywords = {}
       if (params.keywords) {
         _.forEach(search.searchResult, (value, key) => {
@@ -91,7 +91,7 @@ export default {
   }
 };
 
-const countProperties = async (area, params) => {
+const countProperties = async (area, params) => {  
   let body;
   let queryString = '';
   if (!params) {
@@ -105,7 +105,8 @@ const countProperties = async (area, params) => {
 
 const getCountElement = body => {
   body = new JSDOM(body).window.document;
-  return body.querySelector('.pgheader-currentpage em').innerHTML;
+  let count = body.querySelector('.pgheader-currentpage em');
+  return count ? count.innerHTML : {};
 }
 
 const iteratePropertyPages = async (area, params) => {
