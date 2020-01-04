@@ -22,7 +22,8 @@ let property = class Property {
     bedrooms,
     bathrooms,
     address,
-    postcode
+    postcode,
+    images
   } = {}) {
     this.search_id = search_id;
     this.id = id;
@@ -43,6 +44,7 @@ let property = class Property {
     this.bathrooms = bathrooms;
     this.address = address;
     this.postcode = postcode;
+    this.images = images
     this.lastUpdated = new Date(Date.now()).toISOString();
   }
 

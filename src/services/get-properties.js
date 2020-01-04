@@ -230,6 +230,11 @@ const storePropertyModels = (property, searchId) => {
     if (propDescription) {
       keyPropsObj['description'] = propDescription;
     }
+    console.log(JSON.stringify(property.getElementById('key-info-table')));
+    let propImages = getPropertyImages(property);
+    if(propImages) {
+      keyPropsObj['images'] = propImages
+    }
     let address = property
       .querySelector('#body .prop-summary .prop-summary-row h1')
       .innerHTML.split(',')[0]
@@ -322,4 +327,11 @@ const buildDescription = descBody => {
     paragraphs = paragraphs.map(p => p.textContent).join();
   }
   return paragraphs;
+};
+
+const getPropertyImages = property => {
+  const imageElements = Array.from(property.querySelectorAll('#body .prop .prop-top .Mediabox .Mediabox-panels .Mediabox-panel .Slideshow .Slideshow-slides .SlideshowCarousel-clipper div .Slideshow-slide'));
+  // console.log('Image Elements', imageElements);
+  const imageUrls = imageElements.map(x => x.url);
+  return imageUrls
 };

@@ -1,9 +1,8 @@
 import express from 'express';
-import stats from '../services/get-statistics'
 
 let router = express.Router();
 
-router.post('/keywordCounts', (req, res, next) => {
+router.get('/crime/:lat/:long', (req, res) => {
     let data = {}
     try {
         data = await stats.countKeywords(req.body.keywords);
