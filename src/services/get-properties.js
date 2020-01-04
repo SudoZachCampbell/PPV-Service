@@ -91,7 +91,7 @@ export default {
   }
 };
 
-const countProperties = async (area, params) => {  
+const countProperties = async (area, params) => {
   let body;
   let queryString = '';
   if (!params) {
@@ -210,10 +210,10 @@ const getPropertyModel = async (url, searchId) => {
 
 const storePropertyModels = (property, searchId) => {
   try {
-    property = new JSDOM(property);
-    property = property.window.document;
+    const propertyPage = new JSDOM(property);
+    const document = propertyPage.window.document;
     let keyProperties = _.values(
-      property.getElementById('key-info-table').querySelectorAll('tr')
+      document.getElementById('key-info-table').querySelectorAll('tr')
     );
     let keyPropsObj = keyProperties.reduce((accum, keyProp) => {
       return {
@@ -225,21 +225,20 @@ const storePropertyModels = (property, searchId) => {
       };
     }, {});
     let propDescription = buildDescription(
-      property.getElementById('additional-info')
+      document.getElementById('additional-info')
     );
     if (propDescription) {
       keyPropsObj['description'] = propDescription;
     }
-    console.log(JSON.stringify(property.getElementById('key-info-table')));
-    let propImages = getPropertyImages(property);
-    if(propImages) {
+    let propImages = getPropertyImages(document);
+    if (propImages) {
       keyPropsObj['images'] = propImages
     }
-    let address = property
+    let address = document
       .querySelector('#body .prop-summary .prop-summary-row h1')
       .innerHTML.split(',')[0]
       .trim();
-    let postcode = property.querySelector(
+    let postcode = document.querySelector(
       '#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib'
     ).innerHTML;
     let propId = uuid(address + postcode);
@@ -329,9 +328,8 @@ const buildDescription = descBody => {
   return paragraphs;
 };
 
-const getPropertyImages = property => {
-  const imageElements = Array.from(property.querySelectorAll('#body .prop .prop-top .Mediabox .Mediabox-panels .Mediabox-panel .Slideshow .Slideshow-slides .SlideshowCarousel-clipper div .Slideshow-slide'));
-  // console.log('Image Elements', imageElements);
-  const imageUrls = imageElements.map(x => x.url);
+const getPropertyImages = document => {
+  const imageElements = _.values(document.querySelectorAll('#body .prop .prop-top .Mediabox .Mediabox-panels .Mediabox-panel .Slideshow .Slideshow-thumbs a'));
+  const imageUrls = imageElements.map(x => x.href);
   return imageUrls
 };
