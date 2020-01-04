@@ -116,6 +116,7 @@ const iteratePropertyPages = async (area, params) => {
     body = await propertyPal.getPropertySearchByArea(area, 1);
   } else {
     queryString = buildFilteredQueryString(params);
+    console.log(`Full URL: ${queryString}`)
     body = await propertyPal.getFilteredPropertySearch(queryString, 0);
   }
   let propertyList = [];
@@ -169,7 +170,7 @@ const getPropertyUrls = body => {
   let propertyListArray = _.values(
     body
       .getElementById('body')
-      .querySelector('.sr .maxwidth .sr-body .sr-widecol .boxlist')
+      .querySelector('.sr .sr-bg .sr-body .sr-widecol .boxlist')
       .getElementsByTagName('li')
   );
   propertyListArray.reduce((accum, prop) => {
