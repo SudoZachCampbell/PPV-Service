@@ -1,11 +1,12 @@
 import express from 'express';
+import getOpenData from '../services/get-open-data';
 
 let router = express.Router();
 
-router.get('/crime/:lat/:long', (req, res) => {
+router.post('/crime/:lat/:long', async (req, res) => {
     let data = {}
     try {
-        data = await stats.countKeywords(req.body.keywords);
+        data = await getOpenData.getCrimeData(req.body);
     } catch (err) {
         console.log(`${err}`);
         res.status(500).json(err);
