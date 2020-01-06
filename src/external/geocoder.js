@@ -7,8 +7,7 @@ export default {
                 if (error) {
                     reject(error);
                 } else {
-                    let parsedBody = JSON.parse(body);
-                    resolve(parsedBody.results[0].geometry.location);
+                    resolve(JSON.parse(body).results[0].geometry.location);
                 }
             });
         });

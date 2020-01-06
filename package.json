@@ -37,6 +37,7 @@
     "express": "^4.17.1",
     "jsdom": "^15.2.0",
     "lodash": "^4.17.15",
+    "moment": "^2.24.0",
     "request": "^2.88.0",
     "uuid": "^3.3.3",
     "uuid-by-string": "^2.1.5"
