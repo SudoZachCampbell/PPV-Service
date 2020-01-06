@@ -3,7 +3,7 @@ import getOpenData from '../services/get-open-data';
 
 let router = express.Router();
 
-router.post('/crime/:lat/:long', async (req, res) => {
+router.post('/crime', async (req, res) => {
     let data = {}
     try {
         data = await getOpenData.getCrimeData(req.body);
