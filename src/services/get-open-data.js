@@ -19,5 +19,5 @@ const getLatLong = async (address, postcode) => {
 };
 
 const getCrimeData = async (lat, lng) => {
-  return crime.getNeighbourhoodByLL(lat, lng);
+  return crime.getCrimesByLL(lat, lng);
 };

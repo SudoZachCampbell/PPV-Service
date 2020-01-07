@@ -13,9 +13,9 @@ export default {
             });
         });
     },
-    getCrimesByNeighbourhood: (lat, lng) => {
+    getCrimesByLL: (lat, lng) => {
         return new Promise((resolve, reject) => {
-            request.get(`https://data.police.uk/api/crimes-at-location?lat=${lat}&lng=${lng}`, (error, response, body) => {
+            request.get(`https://data.police.uk/api/crimes-street/all-crime?lat=${lat}&lng=${lng}`, (error, response, body) => {
                 if (error) {
                     reject(error);
                 } else {
