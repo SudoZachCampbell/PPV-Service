@@ -7,10 +7,10 @@ export default {
   getCrimeData: async property => {
     console.log('Loading Crime Data');
     const latLng = await getLatLong(property.address, property.postcode);
-    let crimeData = {};
-    crimeData.fullData = await getCrimeData(latLng.lat, latLng.lng);
+    let crimeData = [];
+    crimeData = await getCrimeData(latLng.lat, latLng.lng);
     console.log(`Lat: ${latLng.lat}, Lng: ${latLng.lng}`);
-    crimeData.fullData.map(value => {
+    crimeData.map(value => {
       value.distance = getRadius(
         latLng.lat,
         latLng.lng,
@@ -18,9 +18,7 @@ export default {
         Number(value.location.longitude)
       );
       return value;
-    }
-    );
-    crimeData.categoryCounts = countCategories(crimeData.fullData);
+    });
     return crimeData;
   }
 };
@@ -34,21 +32,6 @@ const getLatLong = async (address, postcode) => {
 
 const getCrimeData = async (lat, lng) => {
   return crime.getCrimesByLL(lat, lng);
-};
-
-const countCategories = crimeData => {
-  return _.reduce(
-    crimeData,
-    (accum, value, key) => {
-      if (value.category in accum) {
-        accum[value.category] += 1;
-      } else {
-        accum[value.category] = 1;
-      }
-      return accum;
-    },
-    {}
-  );
 };
 
 const getRadius = (controlLat, controlLng, crimeLat, crimeLng) => {
