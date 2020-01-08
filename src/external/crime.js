@@ -15,12 +15,11 @@ export default {
     },
     getCrimesByLL: (lat, lng) => {
         return new Promise((resolve, reject) => {
-            console.log(`Lat: ${lat}, Lng: ${lng}`);
             request.get(`https://data.police.uk/api/crimes-street/all-crime?lat=${lat}&lng=${lng}`, (error, response, body) => {
                 if (error) {
                     reject(error);
                 } else {
-                    resolve(body);
+                    resolve(JSON.parse(body));
                 }
             });
         });
