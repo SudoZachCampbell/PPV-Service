@@ -5,8 +5,7 @@ export default {
   getCrimeData: async property => {
     console.log('Loading Crime Data');
     const latLng = await getLatLong(property.address, property.postcode);
-    console.log(`Lat: ${latLng.lat}, Lng: ${latLng.lng}`);
-    const crimeData = await getCrimeData(latLng);
+    const crimeData = await getCrimeData(latLng.lat, latLng.lng);
     return crimeData;
   }
 };
