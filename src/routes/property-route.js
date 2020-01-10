@@ -72,4 +72,15 @@ router.post('/count', async (req, res, next) => {
   res.status(200).json(data);
 });
 
+router.get('/term/:area', async (req, res, next) => {
+  let data = {};
+  try {
+    data = await manageProperty.getAreaTerm(req.params.area);
+  } catch (err) {
+    console.log(`${err}`);
+    res.status(500).json(err);
+  }
+  res.status(200).json(data);
+});
+
 exports.router = router;

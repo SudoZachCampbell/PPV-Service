@@ -59,5 +59,22 @@ module.exports = {
                 resolve(body);
             });
         });
-    }
+    },
+
+    getAddressId: area => {
+        return new Promise((resolve, reject) => {
+          request.get(
+            {
+              url: `https://www.propertypal.com/wapi/search-form/nlp?q=${area}`
+            },
+            (error, response, body) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(JSON.parse(body));
+              }
+            }
+          );
+        });
+      }
 }

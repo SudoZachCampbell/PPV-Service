@@ -88,6 +88,10 @@ export default {
     } catch (err) {
       throw err;
     }
+  },
+
+  getAreaTerm: async area => {
+    return await propertyPal.getAddressId(area);
   }
 };
 
