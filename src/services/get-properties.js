@@ -74,16 +74,20 @@ export default {
       const propertyUrls = await iteratePropertyPages(area, params);
       let search = await getPropertyModels(propertyUrls);
       search.count = propertyUrls.length;
-      let trackKeywords = {}
+      let trackKeywords = {};
       if (params.keywords) {
         _.forEach(search.searchResult, (value, key) => {
-          trackKeywords = value.searchKeywordsTrack(params.keywords, trackKeywords);
+          trackKeywords = value.searchKeywordsTrack(
+            params.keywords,
+            trackKeywords
+          );
         });
       }
       // for (let [key, value] of Object.entries(search.searchResult)) {
       //     await db.saveProperty(key, value);
       // }
       search.keywords = trackKeywords;
+      search.priceCounts = buildPriceCount(search);
       return search;
     } catch (err) {
       throw err;
@@ -105,13 +109,13 @@ const countProperties = async (area, params) => {
     body = await propertyPal.getFilteredPropertySearch(queryString, 0);
   }
   return getCountElement(body);
-}
+};
 
 const getCountElement = body => {
   body = new JSDOM(body).window.document;
   let count = body.querySelector('.pgheader-currentpage em');
   return count ? count.innerHTML : {};
-}
+};
 
 const iteratePropertyPages = async (area, params) => {
   let body;
@@ -120,7 +124,7 @@ const iteratePropertyPages = async (area, params) => {
     body = await propertyPal.getPropertySearchByArea(area, 1);
   } else {
     queryString = buildFilteredQueryString(params);
-    console.log(`Full URL: ${queryString}`)
+    console.log(`Full URL: ${queryString}`);
     body = await propertyPal.getFilteredPropertySearch(queryString, 0);
   }
   let propertyList = [];
@@ -236,7 +240,7 @@ const storePropertyModels = (property, searchId) => {
     }
     let propImages = getPropertyImages(document);
     if (propImages) {
-      keyPropsObj['images'] = propImages
+      keyPropsObj['images'] = propImages;
     }
     let address = document
       .querySelector('#body .prop-summary .prop-summary-row h1')
@@ -333,7 +337,19 @@ const buildDescription = descBody => {
 };
 
 const getPropertyImages = document => {
-  const imageElements = _.values(document.querySelectorAll('#body .prop .prop-top .Mediabox .Mediabox-panels .Mediabox-panel .Slideshow .Slideshow-thumbs a'));
+  const imageElements = _.values(
+    document.querySelectorAll(
+      '#body .prop .prop-top .Mediabox .Mediabox-panels .Mediabox-panel .Slideshow .Slideshow-thumbs a'
+    )
+  );
   const imageUrls = imageElements.map(x => x.href);
-  return imageUrls
+  return imageUrls;
+};
+
+const buildPriceCount = search => {
+  return _.countBy(search, value => {
+    if (value.searchResult.rent) {
+      return value.searchResult.rent;
+    }
+  });
 };
