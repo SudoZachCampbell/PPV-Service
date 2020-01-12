@@ -347,9 +347,9 @@ const getPropertyImages = document => {
 };
 
 const buildPriceCount = search => {
-  return _.countBy(search, value => {
-    if (value.searchResult.rent) {
-      return value.searchResult.rent;
+  return _.countBy(search.searchResult, value => {
+    if ('rent' in value) {
+      return value.rent;
     }
   });
 };
