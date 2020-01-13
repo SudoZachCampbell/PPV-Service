@@ -350,7 +350,10 @@ const buildPriceCount = search => {
   return _.countBy(search.searchResult, value => {
     if ('rent' in value) {
       if (value.rent) {
-        return value.rent;
+        const difference = value.rent % 50;
+        const lower = value.rent - difference;
+        const upper = value.rent + (49.99-difference);
+        return `£${lower} - £${upper}`;
       }
     }
   });
