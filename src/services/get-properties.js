@@ -227,16 +227,22 @@ const storePropertyModels = (property, searchId) => {
       let keyProperties = _.values(
         document.getElementById('key-info-table').querySelectorAll('tr')
       );
-      let keyPropsObj = keyProperties.reduce((accum, keyProp) => {
-        return {
-          ...accum,
-          ...buildKeyProperties(
+      const keyPropsPromises = keyProperties.reduce((accum, keyProp) => {
+        accum.push(
+          buildKeyProperties(
             keyProp.querySelector('th'),
             keyProp.querySelector('td')
           )
+        );
+        return accum;
+      }, []);
+      const keyPropsArray = await Promise.all(keyPropsPromises);
+      let keyPropsObj = keyPropsArray.reduce((accum, value) => {
+        return {
+          ...accum,
+          ...value
         };
       }, {});
-      console.log(keyPropsObj);
       let propDescription = buildDescription(
         document.getElementById('additional-info')
       );
@@ -270,6 +276,7 @@ const storePropertyModels = (property, searchId) => {
 };
 
 const buildKeyProperties = (keyPropHeader, keyPropValue) => {
+  return new Promise((resolve, reject) => {
     let propObj = {};
     switch (keyPropHeader.innerHTML.trim()) {
       case 'Rent':
@@ -328,7 +335,8 @@ const buildKeyProperties = (keyPropHeader, keyPropValue) => {
           `Unhandled Key Property Type: ${keyPropHeader.innerHTML}`
         );
     }
-    return propObj;
+    resolve(propObj);
+  });
 };
 
 const buildDescription = descBody => {
