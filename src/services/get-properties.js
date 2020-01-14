@@ -90,6 +90,11 @@ export default {
       //     await db.saveProperty(key, value);
       // }
       search.priceCounts = buildPriceCount(search);
+      search.location = {
+        lat: params.lat,
+        lng: params.lng,
+        term: params.term
+      }
       return search;
     } catch (err) {
       throw err;
