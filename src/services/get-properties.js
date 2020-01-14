@@ -121,24 +121,23 @@ const getCountElement = body => {
 const iteratePropertyPages = async (area, params) => {
   let body;
   let queryString = '';
-  if (!params) {
-    body = await propertyPal.getPropertySearchByArea(area, 1);
-  } else {
-    queryString = buildFilteredQueryString(params);
-    console.log(`Full URL: ${queryString}`);
-    body = await propertyPal.getFilteredPropertySearch(queryString, 0);
-  }
+  queryString = buildFilteredQueryString(params);
+  console.log(`Full URL: ${queryString}`);
+  body = await propertyPal.getFilteredPropertySearch(queryString, 0);
+  let pagePromises = [];
   let propertyList = [];
   let pages = getPages(body);
   for (let i = 0; i < pages; i++) {
     console.log(`Iterating Page Number: ${i + 1}`);
-    if (!params) {
-      body = await propertyPal.getPropertySearchByArea(area, i + 1);
-    } else {
-      body = await propertyPal.getFilteredPropertySearch(queryString, i);
-    }
-    propertyList.push(...getPropertyUrls(body));
+    pagePromises.push(
+      propertyPal.getFilteredPropertySearch(queryString, i).then(data => {
+        return  [...getPropertyUrls(data)];
+      })
+    );
   }
+  propertyList = await Promise.all(pagePromises);
+  propertyList = propertyList.flat(1);
+  console.log("Property List: ", propertyList);
   return propertyList;
 };
 
