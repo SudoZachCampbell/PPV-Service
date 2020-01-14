@@ -348,7 +348,7 @@ const getPropertyImages = document => {
 };
 
 const buildPriceCount = search => {
-  return _.countBy(search.searchResult, value => {
+  const priceCount =  _.countBy(search.searchResult, value => {
     if ('rent' in value) {
       if (value.rent) {
         const difference = value.rent % 50;
@@ -358,4 +358,8 @@ const buildPriceCount = search => {
       }
     }
   });
+  if (!priceCount['£0-£49.99']) {
+    priceCount['£0-£49.99'] = 0;
+  }
+  return priceCount;
 }
