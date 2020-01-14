@@ -41,7 +41,7 @@ export default {
   getPropertySearch: async (searchId, propertyUrl, keywords) => {
     console.log('New Search');
     let [propId, propObj] = await getPropertyModel(propertyUrl, searchId);
-    console.log("Returned Property Object: ", propObj);
+    console.log('Returned Property Object: ', propObj);
     if (keywords) {
       propObj.searchKeywords(keywords);
     }
@@ -131,13 +131,13 @@ const iteratePropertyPages = async (area, params) => {
     console.log(`Iterating Page Number: ${i + 1}`);
     pagePromises.push(
       propertyPal.getFilteredPropertySearch(queryString, i).then(data => {
-        return  [...getPropertyUrls(data)];
+        return [...getPropertyUrls(data)];
       })
     );
   }
   propertyList = await Promise.all(pagePromises);
   propertyList = propertyList.flat(1);
-  console.log("Property List: ", propertyList);
+  console.log('Property List: ', propertyList);
   return propertyList;
 };
 
@@ -201,128 +201,134 @@ let getPropertyModels = async urls => {
     return accum;
   }, propertyPromiseArray);
   let propertyModelHtmlArray = await Promise.all(propertyPromiseArray);
-  let modelObject = {};
-  propertyModelHtmlArray.reduce((accum, modelHtml) => {
-    let [propId, propObj] = storePropertyModels(modelHtml, searchId);
-    accum[propId] = propObj;
+  let modelPromises = propertyModelHtmlArray.reduce((accum, modelHtml) => {
+    accum.push(storePropertyModels(modelHtml, searchId));
     return accum;
-  }, modelObject);
+  }, []);
+  let modelArray = await Promise.all(modelPromises);
+  let modelObject = modelArray.reduce((accum, data) => {
+    accum[data[0]] = data[1];
+    return accum;
+  }, {});
   return { searchId: searchId, searchResult: modelObject };
 };
 
 const getPropertyModel = async (url, searchId) => {
   let propertyPage = await propertyPal.getPropertyByUrl(url);
-  let [propId, propObj] = storePropertyModels(propertyPage, searchId);
+  let [propId, propObj] = await storePropertyModels(propertyPage, searchId);
   return [propId, propObj];
 };
 
 const storePropertyModels = (property, searchId) => {
-  try {
-    const propertyPage = new JSDOM(property);
-    const document = propertyPage.window.document;
-    let keyProperties = _.values(
-      document.getElementById('key-info-table').querySelectorAll('tr')
-    );
-    let keyPropsObj = keyProperties.reduce((accum, keyProp) => {
-      return {
-        ...accum,
-        ...buildKeyProperties(
-          keyProp.querySelector('th'),
-          keyProp.querySelector('td')
-        )
-      };
-    }, {});
-    let propDescription = buildDescription(
-      document.getElementById('additional-info')
-    );
-    if (propDescription) {
-      keyPropsObj['description'] = propDescription;
+  return new Promise(async (resolve, reject) => {
+    try {
+      const propertyPage = new JSDOM(property);
+      const document = propertyPage.window.document;
+      let keyProperties = _.values(
+        document.getElementById('key-info-table').querySelectorAll('tr')
+      );
+      let keyPropsObj = keyProperties.reduce((accum, keyProp) => {
+        return {
+          ...accum,
+          ...buildKeyProperties(
+            keyProp.querySelector('th'),
+            keyProp.querySelector('td')
+          )
+        };
+      }, {});
+      console.log(keyPropsObj);
+      let propDescription = buildDescription(
+        document.getElementById('additional-info')
+      );
+      if (propDescription) {
+        keyPropsObj['description'] = propDescription;
+      }
+      let propImages = getPropertyImages(document);
+      if (propImages) {
+        keyPropsObj['images'] = propImages;
+      }
+      let address = document
+        .querySelector('#body .prop-summary .prop-summary-row h1')
+        .innerHTML.split(',')[0]
+        .trim();
+      let postcode = document.querySelector(
+        '#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib'
+      ).innerHTML;
+      let propId = uuid(address + postcode);
+      let propObj = new Property({
+        search_id: searchId,
+        id: propId,
+        address: address,
+        postcode: postcode,
+        ...keyPropsObj
+      });
+      resolve([propId, propObj]);
+    } catch (err) {
+      throw err;
     }
-    let propImages = getPropertyImages(document);
-    if (propImages) {
-      keyPropsObj['images'] = propImages;
-    }
-    let address = document
-      .querySelector('#body .prop-summary .prop-summary-row h1')
-      .innerHTML.split(',')[0]
-      .trim();
-    let postcode = document.querySelector(
-      '#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib'
-    ).innerHTML;
-    let propId = uuid(address + postcode);
-    let propObj = new Property({
-      search_id: searchId,
-      id: propId,
-      address: address,
-      postcode: postcode,
-      ...keyPropsObj
-    });
-    return [propId, propObj];
-  } catch (err) {
-    throw err;
-  }
+  });
 };
 
 const buildKeyProperties = (keyPropHeader, keyPropValue) => {
-  let propObj = {};
-  switch (keyPropHeader.innerHTML.trim()) {
-    case 'Rent':
-      propObj['rent'] = parseInt(
-        keyPropValue
-          .querySelector('.price-text')
-          .innerHTML.replace('£', '')
-          .replace(',', '')
-      );
-      break;
-    case 'Rates':
-      propObj['rates'] = keyPropValue.innerHTML.trim();
-      break;
-    case 'Viewable From':
-      propObj['viewableFrom'] = keyPropValue.innerHTML.trim();
-      break;
-    case 'Available From':
-      propObj['availableFrom'] = keyPropValue.innerHTML.trim();
-      break;
-    case 'Lease':
-      propObj['lease'] = keyPropValue.innerHTML.trim();
-      break;
-    case 'Heating':
-      propObj['heating'] = keyPropValue.innerHTML.trim();
-      break;
-    case 'Furnished':
-      propObj['furnished'] = keyPropValue.innerHTML.trim();
-      break;
-    case 'Style':
-      propObj['style'] = keyPropValue.innerHTML.trim();
-      break;
-    case 'Bedrooms':
-      propObj['bedrooms'] = parseInt(keyPropValue.innerHTML.trim());
-      break;
-    case 'Receptions':
-      propObj['receptions'] = parseInt(keyPropValue.innerHTML.trim());
-      break;
-    case 'Bathrooms':
-      propObj['bathrooms'] = parseInt(keyPropValue.innerHTML.trim());
-      break;
-    case 'EPC Rating':
-      break;
-    case 'Status':
-      propObj['status'] = keyPropValue.innerHTML.trim();
-      break;
-    case 'Deposit':
-      propObj['deposit'] = parseInt(
-        keyPropValue.innerHTML
-          .trim()
-          .replace('£', '')
-          .replace(',', '')
-      );
-      break;
-    default:
-      throw new Error(
-        `Unhandled Key Property Type: ${keyPropHeader.innerHTML}`
-      );
-  }
-  return propObj;
+    let propObj = {};
+    switch (keyPropHeader.innerHTML.trim()) {
+      case 'Rent':
+        propObj['rent'] = parseInt(
+          keyPropValue
+            .querySelector('.price-text')
+            .innerHTML.replace('£', '')
+            .replace(',', '')
+        );
+        break;
+      case 'Rates':
+        propObj['rates'] = keyPropValue.innerHTML.trim();
+        break;
+      case 'Viewable From':
+        propObj['viewableFrom'] = keyPropValue.innerHTML.trim();
+        break;
+      case 'Available From':
+        propObj['availableFrom'] = keyPropValue.innerHTML.trim();
+        break;
+      case 'Lease':
+        propObj['lease'] = keyPropValue.innerHTML.trim();
+        break;
+      case 'Heating':
+        propObj['heating'] = keyPropValue.innerHTML.trim();
+        break;
+      case 'Furnished':
+        propObj['furnished'] = keyPropValue.innerHTML.trim();
+        break;
+      case 'Style':
+        propObj['style'] = keyPropValue.innerHTML.trim();
+        break;
+      case 'Bedrooms':
+        propObj['bedrooms'] = parseInt(keyPropValue.innerHTML.trim());
+        break;
+      case 'Receptions':
+        propObj['receptions'] = parseInt(keyPropValue.innerHTML.trim());
+        break;
+      case 'Bathrooms':
+        propObj['bathrooms'] = parseInt(keyPropValue.innerHTML.trim());
+        break;
+      case 'EPC Rating':
+        break;
+      case 'Status':
+        propObj['status'] = keyPropValue.innerHTML.trim();
+        break;
+      case 'Deposit':
+        propObj['deposit'] = parseInt(
+          keyPropValue.innerHTML
+            .trim()
+            .replace('£', '')
+            .replace(',', '')
+        );
+        break;
+      default:
+        throw new Error(
+          `Unhandled Key Property Type: ${keyPropHeader.innerHTML}`
+        );
+    }
+    return propObj;
 };
 
 const buildDescription = descBody => {
@@ -347,12 +353,12 @@ const getPropertyImages = document => {
 };
 
 const buildPriceCount = search => {
-  const priceCount =  _.countBy(search.searchResult, value => {
+  const priceCount = _.countBy(search.searchResult, value => {
     if ('rent' in value) {
       if (value.rent) {
         const difference = value.rent % 50;
         const lower = value.rent - difference;
-        const upper = value.rent + (49.99-difference);
+        const upper = value.rent + (49.99 - difference);
         return `£${lower} - £${upper}`;
       }
     }
@@ -361,4 +367,4 @@ const buildPriceCount = search => {
     priceCount['£0-£49.99'] = 0;
   }
   return priceCount;
-}
+};
