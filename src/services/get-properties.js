@@ -41,6 +41,7 @@ export default {
   getPropertySearch: async (searchId, propertyUrl, keywords) => {
     console.log('New Search');
     let [propId, propObj] = await getPropertyModel(propertyUrl, searchId);
+    console.log("Returned Property Object: ", propObj);
     if (keywords) {
       propObj.searchKeywords(keywords);
     }
@@ -82,11 +83,11 @@ export default {
             trackKeywords
           );
         });
+        search.keywords = trackKeywords;
       }
       // for (let [key, value] of Object.entries(search.searchResult)) {
       //     await db.saveProperty(key, value);
       // }
-      search.keywords = trackKeywords;
       search.priceCounts = buildPriceCount(search);
       return search;
     } catch (err) {
