@@ -23,7 +23,9 @@ let property = class Property {
     bathrooms,
     address,
     postcode,
-    images
+    images,
+    lat,
+    lng
   } = {}) {
     this.search_id = search_id;
     this.id = id;
@@ -44,8 +46,10 @@ let property = class Property {
     this.bathrooms = bathrooms;
     this.address = address;
     this.postcode = postcode;
-    this.images = images
+    this.images = images;
     this.lastUpdated = new Date(Date.now()).toISOString();
+    this.lat = lat;
+    this.lng = lng;
   }
 
   searchKeywords = keywordsSearch => {

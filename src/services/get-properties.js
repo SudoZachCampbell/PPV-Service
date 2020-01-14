@@ -6,6 +6,7 @@ import jsdom from 'jsdom';
 import uuid from 'uuid-by-string';
 import uuidv1 from 'uuid/v1';
 import db from '../external/db';
+import geocoder from '../external/geocoder';
 
 const { JSDOM } = jsdom;
 
@@ -224,6 +225,14 @@ const storePropertyModels = (property, searchId) => {
     try {
       const propertyPage = new JSDOM(property);
       const document = propertyPage.window.document;
+      let address = document
+        .querySelector('#body .prop-summary .prop-summary-row h1')
+        .innerHTML.split(',')[0]
+        .trim();
+      let postcode = document.querySelector(
+        '#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib'
+      ).innerHTML;
+      const latLngPromise = geocoder.getLLByAddress(address, postcode);
       let keyProperties = _.values(
         document.getElementById('key-info-table').querySelectorAll('tr')
       );
@@ -253,17 +262,13 @@ const storePropertyModels = (property, searchId) => {
       if (propImages) {
         keyPropsObj['images'] = propImages;
       }
-      let address = document
-        .querySelector('#body .prop-summary .prop-summary-row h1')
-        .innerHTML.split(',')[0]
-        .trim();
-      let postcode = document.querySelector(
-        '#body .prop-summary .prop-summary-row .prop-summary-townPostcode .text-ib'
-      ).innerHTML;
       let propId = uuid(address + postcode);
+      const latLng = await latLngPromise;
       let propObj = new Property({
         search_id: searchId,
         id: propId,
+        lat: latLng.lat,
+        lng: latLng.lng,
         address: address,
         postcode: postcode,
         ...keyPropsObj
